@@ -1,0 +1,1 @@
+This folder contains data files that have been trimmed, queried and/or prepped for further analysis. 
