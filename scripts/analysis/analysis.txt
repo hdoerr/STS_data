@@ -1,0 +1,1 @@
+This folder contains scripts used for analysis and figures that are not related to GIS. 
