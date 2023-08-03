@@ -1,0 +1,115 @@
+---
+title: "STS_location_data_workflow"
+author: "Holly"
+date: "July 25, 2023"
+output: html_document
+---
+
+This simple workflow can be used to pull out unique location identifiers and their associated data from our UNCST matched detections files, and output a new csv file to be used to plot coordinates in qGIS. 
+
+First we set out working directory and load the data: 
+
+```{r}
+#You can set your working directory to make sure your code is pulling the files you want.
+setwd("C:/Users/hdoer/Documents/STS_data/6224302/6224302")
+
+#install.packages("dplyr")
+#install.packages("tidyverse")
+library(tidyverse)
+
+#load the data file and assign as a dataframe: 
+data_master <- read.csv("master_UNCST_matched_detections_data_2020_2023.csv") #read in data
+
+```
+
+First we are going to select and keep only the columns of data that we are interested in for our final file output. Then we extract information for only each unique location identifier and output to a new csv. 
+
+```{r}
+#select relevant/desired columns and output to new dataframe
+receiver_data_select <- data_master %>% select(station, longitude, latitude, receiver_group)
+
+#filter new df to include only distinct (one copy) of station ID and output entire row to new dataframe
+receiver_data_distinct <- receiver_data_select %>% distinct(station, .keep_all=TRUE) 
+
+#Save filtered data to .csv file 
+write.csv(receiver_data_distinct, "Receiver_plot_data.csv")
+```
+
+Now we're going to do a similar workflow to produce trimmed down versions of each year, and each tagged shark of our data. We'll start with 2023 becuase it has the least amount of data pings.
+
+```{r}
+
+#Load data file:
+data_2023 <- read.csv("uncst_matched_detections_2023.csv")
+
+#select relevant/desired columns and output to new dataframe
+data_2023_select <- data_2023 %>% select(tagname, longitude, latitude, datecollected, yearcollected, monthcollected, daycollected, julianday, timeofday, receiver_group)
+write.csv(data_2023_select, "data_2023_trimmed.csv")
+
+#producing a unique list of tagnames to query:
+data_2023_distinct <- data_2023_select %>% distinct(tagname)
+
+#producing a csv with an individual sharks information:
+data_2023_21587 <- data_2023_select %>% filter(tagname == 'A69-9001-21587', .preserve = TRUE)
+#write csv for this shark
+write.csv(data_2023_21587, "data_2023_21587.csv")
+
+#data_2023_individual <- list()
+
+#for (i in 1:length(data_2023_distinct)) {
+  #data_2023_individual[[i]] <- data_2023_select %>% filter(tagname == data_2023_select[[i]], .preserve = TRUE)
+  
+#}
+
+#data_2023_individual
+```
+
+We can do the same for the other years:
+```{r}
+
+#Load data file:
+data_2022 <- read.csv("uncst_matched_detections_2022.csv")
+
+#select relevant/desired columns and output to new dataframe
+data_2022_select <- data_2022 %>% select(tagname, longitude, latitude, datecollected, yearcollected, monthcollected, daycollected, julianday, timeofday, receiver_group)
+write.csv(data_2022_select, "data_2022_trimmed.csv")
+
+#producing a unique list of tagnames to query:
+data_2022_distinct <- data_2022_select %>% distinct(tagname)
+
+#producing a csv with an individual sharks information:
+data_2022_18241 <- data_2022_select %>% filter(tagname == 'A69-9001-18241', .preserve = TRUE)
+#write csv for this shark
+write.csv(data_2022_18241, "data_2022_18241.csv")
+
+
+
+#Load data file:
+data_2021 <- read.csv("uncst_matched_detections_2021.csv")
+
+#select relevant/desired columns and output to new dataframe
+data_2021_select <- data_2021 %>% select(tagname, longitude, latitude, datecollected, yearcollected, monthcollected, daycollected, julianday, timeofday, receiver_group)
+write.csv(data_2021_select, "data_2021_trimmed.csv")
+
+#Load data file:
+data_2020 <- read.csv("uncst_matched_detections_2020.csv")
+
+#select relevant/desired columns and output to new dataframe
+data_2020_select <- data_2020 %>% select(tagname, longitude, latitude, datecollected, yearcollected, monthcollected, daycollected, julianday, timeofday, receiver_group)
+write.csv(data_2020_select, "data_2020_trimmed.csv")
+
+```
+
+data_2022_distinct <- list("A69-9001-17760", "A69-9001-17761",
+"A69-9001-17762")
+data_2022_individual <- list()
+
+This is a for loop I've been trying to figure out....
+for (tagname in 1:length(data_2022_distinct)) {
+ (data_2022_individual[[tagname]] <- data_2022_select %>% filter(tagname == data_2022_distinct[[tagname]], .preserve = TRUE)) 
+  write.csv(data_2022_individual[[i]], file = paste0("data_2022_", i, ".csv"))
+  
+}
+
+data_2022_individual
+```

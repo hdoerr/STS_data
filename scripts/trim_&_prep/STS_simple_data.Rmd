@@ -1,0 +1,245 @@
+---
+title: "STS_simple_data_workflow"
+author: "Holly Doerr"
+date: "2023-07-19"
+output: html_document
+---
+
+This is our workflow for manipulating the simple sand tiger shark tag and reciever data. 
+
+First, we will load our reciever data files and assign individual dataframes. 
+
+```{r read files, eval=FALSE, message = FALSE, warning = FALSE}
+#You can set your working directory to make sure your code is pulling the files you want.
+setwd("C:/Users/hdoer/Documents/STS_data/6224302/6224302")
+
+#install.packages("dplyr")
+#install.packages("tidyverse")
+library(tidyverse)
+
+#load the data file and assign as a dataframe: 
+data_2020 <- read.csv("uncst_matched_detections_2020.csv") #read in data
+
+data_2021 <- read.csv("uncst_matched_detections_2021.csv") #read in data
+
+data_2022 <- read.csv("uncst_matched_detections_2022.csv") #read in data
+
+data_2023 <- read.csv("uncst_matched_detections_2023.csv") #read in data
+
+
+head(data_2020)
+head(data_2021)
+head(data_2022)
+head(data_2023)
+```
+Now that we have loaded our individual reciever data files, let's start by combining the files to make one big master dataframe using our bind_rows() function - this makes it easier to index the data as a whole downstream. 
+
+```{r}
+master_data <- bind_rows(data_2020, data_2021, data_2022, data_2023, .id=NULL)
+
+head(master_data)
+
+write.csv(master_data, 'master_UNCST_matched_detections_data_2020_2023.csv')
+```
+
+Now we have our master file! Before we jump into master file queries, let's look at some data per year: 
+
+```{r}
+#number of sharks:
+sharks_2020 <- data_2020 %>% group_by(tagname) %>% tally()#this tallies how many times each tagname appears, aka how many times each individual shark pinged, and outputs to a new table
+sharks_2020 <- sharks_2020 %>% arrange(desc(n)) #this rearranges the tallied data to be in descending order to easily determine min and max pings
+
+sharks_2021 <- data_2021 %>% group_by(tagname) %>% tally()
+sharks_2021 <- sharks_2021 %>% arrange(desc(n))
+
+sharks_2022 <- data_2022 %>% group_by(tagname) %>% tally()
+sharks_2022 <- sharks_2022 %>% arrange(desc(n))
+
+sharks_2023 <- data_2023 %>% group_by(tagname) %>% tally()
+sharks_2023 <- sharks_2023 %>% arrange(desc(n))
+
+
+#number of pinged locations: 
+
+locations_2020 <- data_2020 %>% group_by(station) %>% tally() #this tallies how many times each location is associated with an individual shark's ping and outputs to a new table. 
+locations_2020 <- locations_2020 %>% arrange(desc(n)) #this rearranges the tallies to be in descending order 
+
+locations_2021 <- data_2021 %>% group_by(station) %>% tally()
+locations_2021 <- locations_2021 %>% arrange(desc(n))
+
+locations_2022 <- data_2022 %>% group_by(station) %>% tally()
+locations_2022 <- locations_2022 %>% arrange(desc(n))
+
+locations_2023 <- data_2023 %>% group_by(station) %>% tally()
+locations_2023 <- locations_2023 %>% arrange(desc(n))
+```
+
+Now let's look at things for the total set: 
+```{r}
+sharks_total <- master_data %>% group_by(tagname) %>% tally()
+sharks_total <- sharks_total %>% arrange(desc(n))
+
+locations_total <- master_data %>% group_by(station) %>% tally()
+locations_total <- locations_total %>% arrange(desc(n))
+```
+
+So we've crunched some simple numbers, now let's see if we can visualize these data in stacked bar graphs!
+
+First, we can simplify our data sets to create new data frames that contain only the data we need for the graphs.
+```{r}
+#we select just the tagname and station columns for each of our master, 2020, 2021, 2022 and 2023 files.
+
+master_data_specific <- select(master_data, tagname, station)
+head(master_data_specific)
+
+data_2020_specific <- select(data_2020, tagname, station)
+head(data_2020_specific)
+
+data_2021_specific <- select(data_2021, tagname, station)
+head(data_2021_specific)
+
+data_2022_specific <- select(data_2022, tagname, station)
+head(data_2022_specific)
+
+data_2023_specific <- select(data_2023, tagname, station)
+head(data_2023_specific)
+```
+
+
+```{r}
+# library
+install.packages("viridis")
+library(ggplot2)
+library(viridis)
+#install.packages("hrbrthemes")
+#library(hrbrthemes)
+```
+Next we will plot our data in stacked bar graphs to visualize in a different way!
+
+```{r}
+ 
+# Master plot stacked
+
+
+Total_data <- ggplot(master_data_specific, aes(fill=station, x= tagname)) + 
+    geom_bar() +
+    #scale_y_continuous(labels = scales::percent) +
+    #scale_fill_viridis(discrete = T) +
+    ggtitle("Sand Tiger shark tracker pings along the East Coast from 2020 - 2023") +
+    theme(legend.key.size = unit(0.5, units = "mm"),
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 3),
+        plot.title = element_text(size=10),
+        axis.title = element_text(size=14,face="bold"),
+        #change x text size
+        axis.text.x = element_text(angle = 90, size = 10))+
+    xlab("")
+
+Total_data
+
+ggsave(filename = "master_graph.png", plot = Total_data)
+```
+
+```{r}
+# 2020 plot stacked
+
+data_2020_graph <- ggplot(data_2020_specific, aes(fill=station, x= tagname)) + 
+    geom_bar() +
+    #scale_y_continuous(labels = scales::percent) +
+    #scale_fill_viridis(discrete = T) +
+    ggtitle("Sand Tiger shark tracker pings along the East Coast from 2020 - 2023") +
+    theme(legend.position = "none", 
+        #legend.key.size = unit(0.5, units = "mm"),
+        #legend.title = element_text(size = 10),
+        #legend.text = element_text(size = 3),
+        plot.title = element_text(size=12, face="bold"),
+        axis.title = element_text(size=10,face="bold"),
+        #change x text size
+        axis.text.x = element_text(angle = 90, size = 10))+
+    xlab("")
+
+data_2020_graph
+
+ggsave(filename = "2020_data_graph.png", plot = data_2020_graph)
+
+library(cowplot)
+library(grid)
+library(gridExtra)
+
+#Do this to save the legend separately. Must graph plot with legend first, then go back and resave image without legend.
+legend <- cowplot::get_legend(data_2020_graph)
+grid.newpage()
+grid.draw(legend)
+
+ggsave(filename = "2020_data_legend.png", plot = legend, width = 10, height= 7)
+
+```
+
+```{r}
+
+#2021 plot stacked
+
+data_2021_graph <- ggplot(data_2021_specific, aes(fill=station, x= tagname)) + 
+    geom_bar() +
+    #scale_y_continuous(labels = scales::percent) +
+    #scale_fill_viridis(discrete = T) +
+    ggtitle("Sand Tiger shark tracker pings along the East Coast during 2021") +
+    theme(legend.position = "none", 
+        #legend.key.size = unit(0.5, units = "mm"),
+        #legend.title = element_text(size = 10),
+        #legend.text = element_text(size = 3),
+        plot.title = element_text(size=12, face="bold"),
+        axis.title = element_text(size=10,face="bold"),
+        #change x text size
+        axis.text.x = element_text(angle = 90, size = 10))+
+    xlab("")
+
+data_2021_graph
+
+ggsave(filename = "2021_data_graph.png", plot = data_2021_graph)
+
+library(cowplot)
+library(grid)
+library(gridExtra)
+
+#Do this to save the legend separately. Must graph plot with legend first, then go back and resave image without legend.
+legend <- cowplot::get_legend(data_2021_graph)
+grid.newpage()
+grid.draw(legend)
+
+ggsave(filename = "2021_data_legend.png", plot = legend, width = 14, height= 7)
+```
+
+```{r}
+#2022 plot stacked
+
+data_2022_graph <- ggplot(data_2022_specific, aes(fill=station, x= tagname)) + 
+    geom_bar() +
+    #scale_y_continuous(breaks = seq(0, 1700, by=50), limits=c(0,1700)) +
+    #scale_fill_viridis(discrete = T) +
+    ggtitle("Sand Tiger shark tracker pings along the East Coast during 2021") +
+    theme(legend.position = "none", 
+        #legend.key.size = unit(0.5, units = "mm"),
+        #legend.title = element_text(size = 10),
+        #legend.text = element_text(size = 3),
+        plot.title = element_text(size=12, face="bold"),
+        axis.title = element_text(size=10,face="bold"),
+        #change x text size
+        axis.text.x = element_text(angle = 90, size = 10))+
+    xlab("")
+
+data_2022_graph
+
+ggsave(filename = "2022_data_graph.png", plot = data_2022_graph)
+
+library(cowplot)
+library(grid)
+library(gridExtra)
+
+#Do this to save the legend separately. Must graph plot with legend first, then go back and resave image without legend.
+legend <- cowplot::get_legend(data_2022_graph)
+grid.newpage()
+grid.draw(legend)
+
+ggsave(filename = "2022_data_legend.png", plot = legend, width = 10, height= 7)
+```
